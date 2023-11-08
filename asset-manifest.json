@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/WhereShallWeMeet/static/css/main.13aa37d0.css",
+    "main.js": "/WhereShallWeMeet/static/js/main.f2a31309.js",
+    "static/js/787.0bfb1c9e.chunk.js": "/WhereShallWeMeet/static/js/787.0bfb1c9e.chunk.js",
+    "index.html": "/WhereShallWeMeet/index.html",
+    "main.13aa37d0.css.map": "/WhereShallWeMeet/static/css/main.13aa37d0.css.map",
+    "main.f2a31309.js.map": "/WhereShallWeMeet/static/js/main.f2a31309.js.map",
+    "787.0bfb1c9e.chunk.js.map": "/WhereShallWeMeet/static/js/787.0bfb1c9e.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.13aa37d0.css",
+    "static/js/main.f2a31309.js"
+  ]
+}
