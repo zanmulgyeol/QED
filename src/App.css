@@ -1,3 +1,15 @@
 .map{
   height: 100vh;
 }
+
+.map-small{
+  height: 35vh;
+}
+
+a{
+  text-decoration: none;
+}
+
+.view-facility{
+  padding: .5rem;
+}
