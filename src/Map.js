@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import { MapContainer, Marker, TileLayer, Popup, CircleMarker } from "react-leaflet";
 import geometricMedian from "./GeoMedian"
 import axios from "axios"
+import { Link } from "react-scroll"
 
 
 function GeoMedianMarker({ geoMedianPos, mode, setMode }){
@@ -13,7 +14,7 @@ function GeoMedianMarker({ geoMedianPos, mode, setMode }){
 
   return( geoMedianPos === null?null:
     <CircleMarker center={geoMedianPos} radius={20}>
-      <Popup>
+      <Popup position={geoMedianPos}>
         <div>기하 중앙값</div>
         <div>위도: {(Math.round(geoMedianPos[0] * 1000000) / 1000000).toFixed(6)}</div>
         <div>경도: {(Math.round(geoMedianPos[1] * 1000000) / 1000000).toFixed(6)}</div>
@@ -40,12 +41,33 @@ function DraggableMarker({ position, setPosition, index, marker }){
     },
   }), [position, marker, setPosition]);
 
+  const removeMarker = (event) => {
+    event.preventDefault();
+    closePopup();
+    const newPosition = [...position];
+    newPosition.splice(index, 1);
+    setPosition(newPosition);
+  }
+
+  const closePopup = (event) => {
+    const newPosition = [...position];
+    newPosition[index].popupOpened = false;
+    setPosition(newPosition);
+  }
+
+  const clickMarker = (event) => {
+    const newPosition = [...position];
+    newPosition[index].popupOpened = true;
+    setPosition(newPosition);
+  }
+
   return(
-    <Marker key={index} position={marker.pos} draggable={true} eventHandlers={eventHandlers} ref={markerRef}>
-      <Popup>
-        <div>{marker.id}번 마커</div>
+    <Marker key={index} position={marker.pos} draggable={true} eventHandlers={eventHandlers} ref={markerRef} onClick={clickMarker}>
+      <Popup position={marker.pos} isOpen={marker.popupOpened}>
+        <div>{index+1}번 마커</div>
         <div>위도: {(Math.round(marker.pos[0] * 1000000) / 1000000).toFixed(6)}</div>
         <div>경도: {(Math.round(marker.pos[1] * 1000000) / 1000000).toFixed(6)}</div>
+        <div><a href="#" onClick={removeMarker}>이 마커 삭제하기</a></div>
       </Popup>
     </Marker>
   )
@@ -116,6 +138,7 @@ function Map() {
       const newMarker = {
         id: position.length+1,
         pos: [center.lat, center.lng],
+        popupOpened: false,
       };
       setPosition([...position, newMarker]);
     }
@@ -139,6 +162,10 @@ function Map() {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
+  }, [position]);
+
+  useEffect(() => {
+    console.log("!!!");
   }, [position]);
 
   // OSM: https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png
@@ -177,13 +204,14 @@ function Map() {
     );
   } else if (mode === "viewFacility"){
     return (
-      <div className="view-facility">
+      <div>
         <MapContainer
           key={currentPos}
           className="map-small"
           center={geoMedianPos}
           zoom={16}
           ref={mapRef}
+          id="map"
           worldCopyJump
         >
           <TileLayer
@@ -193,10 +221,18 @@ function Map() {
           {
             data !== null && data.map((item, index) => (
               <Marker key={index} position={[item.mapy,item.mapx]}>
-                <Popup>
-                  <div>{item.title}</div>
+                <Popup position={[item.mapy, item.mapx]}>
+                  <div>{item.title} ({Math.round(item.dist)}m)</div>
                   <div>{item.addr1}</div>
-                  <div>거리: {Math.round(item.dist)}m</div>
+                  <div>
+                    <Link
+                    to={item.contentid}
+                    spy={true}
+                    smooth={true}
+                    duration={500}
+                    style={{cursor: "pointer"}}
+                    >상세 정보 확인하기</Link>
+                  </div>
                 </Popup>
               </Marker>
             ))
@@ -207,28 +243,39 @@ function Map() {
             setMode={setMode}
           />
         </MapContainer>
-        {
-          loading?
-          <div>데이터를 불러오는 중입니다.</div>:
-          (
-            data === null?
-            <div>데이터를 불러오는 중에 에러가 발생했습니다.</div>:
-            <>
-              <h3>문화 시설 정보</h3>
-              <h4>문화 시설의 개수: {dataNum}</h4>
-              {
-                data.map((item, index) => (
-                  <div key={index}>
-                    <div>{item.title}</div>
-                    <div>{item.addr1}</div>
-                    <div>거리: {Math.round(item.dist)}m</div>
-                    <br></br>
-                  </div>
-                ))
-              }
-            </>
-          )
-        }
+        <main>
+          {
+            loading?
+            <h3 className="facility-title">데이터를 불러오는 중입니다.</h3>:
+            (
+              data === null?
+              <h3 className="facility-title">데이터를 불러오는 중에 에러가 발생했습니다.</h3>:
+              <>
+                <h3 className="facility-title">{dataNum!==0?`문화 시설 ${dataNum}개가 검색되었습니다.`:"검색된 문화 시설이 없습니다."}</h3>
+                {
+                  data.map((item, index) => (
+                    <article key={index} className="facility-article" style={{backgroundColor: `hsl(0, 80%, ${Math.round(item.dist)/50+20}%)`,
+                    color: Math.round(item.dist)/50>30?"#000000":"#efefef"}} id={item.contentid}>
+                      <div>{item.title} ({Math.round(item.dist)}m)</div>
+                      <div>{item.addr1}</div>
+                      {item.firstimage&&<img src={item.firstimage} alt="" className="facility-image" style={{marginTop: ".5rem", marginBottom: ".5rem"}}></img>}
+                    </article>
+                  ))
+                }
+              </>
+            )
+          }
+        </main>
+        <div className="goto-top">
+          <Link
+          to="map"
+          spy={true}
+          smooth={true}
+          duration={500}
+          >
+            <div style={{fontSize: "2rem", fontWeight: "bold"}}>↑</div>
+          </Link>
+        </div>
       </div>
     );
   }

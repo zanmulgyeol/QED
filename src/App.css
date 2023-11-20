@@ -3,13 +3,38 @@
 }
 
 .map-small{
-  height: 35vh;
+  height: 50vh;
 }
 
 a{
   text-decoration: none;
 }
 
-.view-facility{
+.facility-title{
   padding: .5rem;
+  margin-top: .5rem;
+  margin-bottom: .5rem;
+}
+
+.facility-article{
+  padding: .5rem;
+  border-top: 2px dashed #aaaaaa;
+}
+
+.facility-image{
+  max-height: 40vh;
+}
+
+.goto-top{
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  background-color: #cccccc;
+  color: #464646;
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 }
