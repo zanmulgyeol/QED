@@ -25,6 +25,34 @@ a{
   max-height: 40vh;
 }
 
+.facility-sub-image{
+  max-height: 30vh;
+}
+
+.facility-sub-image-container{
+  margin-top: .5rem;
+  margin-bottom: .5rem;
+}
+
+.facility-sub-image-label::before{
+  content: "↑";
+  margin-right: .3rem;
+  font-size: large;
+}
+
+.facility-small-image{
+  max-height: 10vh;
+}
+
+.facility-button{
+  background-color: #ff6f00;
+  color: #efefef;
+  padding: .3rem;
+  margin-top: .5rem;
+  border: 0px;
+  border-radius: .2rem;
+}
+
 .goto-top{
   position: fixed;
   bottom: 10px;

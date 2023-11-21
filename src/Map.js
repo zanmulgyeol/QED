@@ -20,7 +20,7 @@ function GeoMedianMarker({ geoMedianPos, mode, setMode }){
         <div>경도: {(Math.round(geoMedianPos[1] * 1000000) / 1000000).toFixed(6)}</div>
         <div><a href="#"
         onClick={gotoFacility}
-        >{mode === "setMap"?"주변 문화시설 확인하기":"기하 중앙값 다시 구하러 가기"}</a></div>
+        >{mode === "setMap"?"주변 문화시설 확인하기":"기하 중앙값 다시 구하기"}</a></div>
       </Popup>
     </CircleMarker>
   )
@@ -95,6 +95,7 @@ function Map() {
     const fetchData = async() => {
       try{
         const response12 = await axios.get(`https://apis.data.go.kr/B551011/KorService1/locationBasedList1?serviceKey=aMat5cuUbFNFhyobZylKAgyEgVGjbYe9MNjhWwx6jvm%2BAOvMa9GuhE8QPf4EQnAARslaft9vJXynH0Y1IK0tGw%3D%3D&numOfRows=100000&pageNo=1&MobileOS=ETC&MobileApp=WhereShallWeMeet&_type=json&listYN=Y&arrange=E&mapX=${(Math.round(geoMedianPos[1] * 1000000) / 1000000).toFixed(6)}&mapY=${(Math.round(geoMedianPos[0] * 1000000) / 1000000).toFixed(6)}&radius=3000&contentTypeId=12`);
+        console.log(response12.data);
         const data12 = await response12.data.response.body.items.item;
         const response14 = await axios.get(`https://apis.data.go.kr/B551011/KorService1/locationBasedList1?serviceKey=aMat5cuUbFNFhyobZylKAgyEgVGjbYe9MNjhWwx6jvm%2BAOvMa9GuhE8QPf4EQnAARslaft9vJXynH0Y1IK0tGw%3D%3D&numOfRows=100000&pageNo=1&MobileOS=ETC&MobileApp=WhereShallWeMeet&_type=json&listYN=Y&arrange=E&mapX=${(Math.round(geoMedianPos[1] * 1000000) / 1000000).toFixed(6)}&mapY=${(Math.round(geoMedianPos[0] * 1000000) / 1000000).toFixed(6)}&radius=3000&contentTypeId=14`);
         const data14 = await response14.data.response.body.items.item;
@@ -112,6 +113,7 @@ function Map() {
         if(data39 !== undefined) data.push(...Object.values(data39));
         if(data !== null) data.sort((a, b) => a.dist - b.dist);
         setData(data);
+        console.log(data);
         let dataNum = 0;
         dataNum += response12.data.response.body.totalCount;
         dataNum += response14.data.response.body.totalCount;
@@ -167,6 +169,44 @@ function Map() {
   useEffect(() => {
     console.log("!!!");
   }, [position]);
+
+  const loadDetails = async (index) => {
+    const newData = [...data];
+    const item = newData[index];
+    try{
+      if(data[index].detail_added !== true){
+        const response_detail = await axios.get(`https://apis.data.go.kr/B551011/KorService1/detailCommon1?serviceKey=aMat5cuUbFNFhyobZylKAgyEgVGjbYe9MNjhWwx6jvm%2BAOvMa9GuhE8QPf4EQnAARslaft9vJXynH0Y1IK0tGw%3D%3D&MobileOS=ETC&MobileApp=WhereShallWeMeet&_type=json&contentId=${item.contentid}&contentTypeId=${item.contenttypeid}&defaultYN=Y&firstImageYN=N&areacodeYN=N&catcodeYN=N&addrinfoYN=Y&mapinfoYN=N&overviewYN=Y&numOfRows=10&pageNo=1`);
+        const data_detail = response_detail.data.response.body.items.item[0];
+        item.telname = data_detail.telname;
+        item.zipcode = data_detail.zipcode;
+        item.overview = data_detail.overview;
+        item.detail_added = true;
+      }
+    }catch(error){
+      console.error('Error!', error);
+    }
+    try{
+      if(data[index].images_added !== true){
+        const response_images = await axios.get(`https://apis.data.go.kr/B551011/KorService1/detailImage1?serviceKey=aMat5cuUbFNFhyobZylKAgyEgVGjbYe9MNjhWwx6jvm%2BAOvMa9GuhE8QPf4EQnAARslaft9vJXynH0Y1IK0tGw%3D%3D&MobileOS=ETC&MobileApp=WhereShallWeMeet&_type=json&contentId=${item.contentid}&imageYN=Y&subImageYN=Y&numOfRows=100&pageNo=1`);
+        const data_images = response_images.data.response.body.items.item;
+        item.images = data_images;
+        item.images_added = true;
+      }
+    }catch(error){
+      console.error('Error!', error)
+    }
+    if(item.contenttypeid === "39"){
+      try{
+        const response_menu_images = await axios.get(``);
+        const data_menu_images = response_menu_images.data.response.body.items.item;
+        item.menu_images = data_menu_images;
+        item.menu_images_added = true;
+      }catch(error){
+        console.error('Error!', error)
+      }
+    }
+    setData(newData);
+  }
 
   // OSM: https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png
   // OSM_kor: https://tiles.osm.kr/hot/{z}/{x}/{y}.png
@@ -224,6 +264,7 @@ function Map() {
                 <Popup position={[item.mapy, item.mapx]}>
                   <div>{item.title} ({Math.round(item.dist)}m)</div>
                   <div>{item.addr1}</div>
+                  {item.firstimage && <img src={item.firstimage} alt="" className="facility-small-image" style={{marginTop: ".5rem", marginBottom: ".5rem"}}></img>}
                   <div>
                     <Link
                     to={item.contentid}
@@ -231,6 +272,7 @@ function Map() {
                     smooth={true}
                     duration={500}
                     style={{cursor: "pointer"}}
+                    onClick={() => loadDetails(index)}
                     >상세 정보 확인하기</Link>
                   </div>
                 </Popup>
@@ -251,14 +293,37 @@ function Map() {
               data === null?
               <h3 className="facility-title">데이터를 불러오는 중에 에러가 발생했습니다.</h3>:
               <>
-                <h3 className="facility-title">{dataNum!==0?`문화 시설 ${dataNum}개가 검색되었습니다.`:"검색된 문화 시설이 없습니다."}</h3>
+                <h3 className="facility-title">{dataNum!==0?`3㎞ 이내에 문화 시설 ${dataNum}개가 검색되었습니다.`:"3㎞ 이내에 검색된 문화 시설이 없습니다."}</h3>
                 {
                   data.map((item, index) => (
                     <article key={index} className="facility-article" style={{backgroundColor: `hsl(0, 80%, ${Math.round(item.dist)/50+20}%)`,
-                    color: Math.round(item.dist)/50>30?"#000000":"#efefef"}} id={item.contentid}>
+                    color: Math.round(item.dist)>2300?"#000000":"#efefef"}} id={item.contentid}>
                       <div>{item.title} ({Math.round(item.dist)}m)</div>
+                      <div>
+                        {item.contenttypeid === "12"&&"관광지"}
+                        {item.contenttypeid === "14"&&"문화시설"}
+                        {item.contenttypeid === "32"&&"숙박"}
+                        {item.contenttypeid === "38"&&"쇼핑"}
+                        {item.contenttypeid === "39"&&"음식점"}
+                      </div>
                       <div>{item.addr1}</div>
                       {item.firstimage&&<img src={item.firstimage} alt="" className="facility-image" style={{marginTop: ".5rem", marginBottom: ".5rem"}}></img>}
+                      {item.tel !== ""&&<div>전화번호: {item.tel} ({item.telname!==undefined&&item.telname})</div>}
+                      {item.zipcode !== undefined&&<div>우편번호: {item.zipcode}</div>}
+                      {item.overview !== undefined&&<p dangerouslySetInnerHTML={{ __html: item.overview }}></p>}
+                      {!item.detail_added&&<div><button className="facility-button" onClick={() => loadDetails(index)}>자세히 보기</button></div>}
+                      {item.images_added === true&&item.images !== undefined&&item.images.map((imageitem, imageindex) => (
+                        <div key={imageindex} className="facility-sub-image-container">
+                          <img src={imageitem.originimgurl} alt="" className="facility-sub-image"></img>
+                          {imageitem.imgname !== ""&&<div className="facility-sub-image-label">{imageitem.imgname}</div>}
+                        </div>
+                      ))}
+                      {item.menu_images_added === true&&item.menu_images !== undefined&&item.menu_images.map((menuimageitem, menuimageindex) => (
+                        <div key={menuimageindex} className="facility-sub-image-container">
+                          <img src={menuimageitem.originimgurl} alt="" className="facility-sub-image"></img>
+                          {menuimageitem.imgname !== ""&&<div className="facility-sub-image-label">{menuimageitem.imgname}</div>}
+                        </div>
+                      ))}
                     </article>
                   ))
                 }
