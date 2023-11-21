@@ -10,6 +10,14 @@ a{
   text-decoration: none;
 }
 
+article a{
+  color: inherit;
+}
+
+a:hover{
+  text-decoration: underline;
+}
+
 .facility-title{
   padding: .5rem;
   margin-top: .5rem;

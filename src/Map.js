@@ -1,14 +1,18 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { MapContainer, Marker, TileLayer, Popup, CircleMarker } from "react-leaflet";
+import { MapContainer, Marker, TileLayer, Popup, CircleMarker, useMapEvents } from "react-leaflet";
+import L from 'leaflet';
 import geometricMedian from "./GeoMedian"
 import axios from "axios"
 import { Link } from "react-scroll"
 
 
-function GeoMedianMarker({ geoMedianPos, mode, setMode }){
+function GeoMedianMarker({ geoMedianPos, mode, setMode, setFacilityMapPos=null }){
   const gotoFacility = (event) => {
     event.preventDefault();
-    if (mode === "setMap") setMode("viewFacility");
+    if (mode === "setMap"){
+      setMode("viewFacility");
+      setFacilityMapPos(geoMedianPos);
+    }
     else setMode("setMap")
   }
 
@@ -81,6 +85,8 @@ function Map() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [dataNum, setDataNum] = useState(0);
+  const [facilityMapPos, setFacilityMapPos] = useState(null);
+  const [searchDist, setSearchDist] = useState(3000);
 
   useEffect(() => {
     if ("geolocation" in navigator) {
@@ -94,16 +100,16 @@ function Map() {
   useEffect(() => {
     const fetchData = async() => {
       try{
-        const response12 = await axios.get(`https://apis.data.go.kr/B551011/KorService1/locationBasedList1?serviceKey=aMat5cuUbFNFhyobZylKAgyEgVGjbYe9MNjhWwx6jvm%2BAOvMa9GuhE8QPf4EQnAARslaft9vJXynH0Y1IK0tGw%3D%3D&numOfRows=100000&pageNo=1&MobileOS=ETC&MobileApp=WhereShallWeMeet&_type=json&listYN=Y&arrange=E&mapX=${(Math.round(geoMedianPos[1] * 1000000) / 1000000).toFixed(6)}&mapY=${(Math.round(geoMedianPos[0] * 1000000) / 1000000).toFixed(6)}&radius=3000&contentTypeId=12`);
+        const response12 = await axios.get(`https://apis.data.go.kr/B551011/KorService1/locationBasedList1?serviceKey=aMat5cuUbFNFhyobZylKAgyEgVGjbYe9MNjhWwx6jvm%2BAOvMa9GuhE8QPf4EQnAARslaft9vJXynH0Y1IK0tGw%3D%3D&numOfRows=100000&pageNo=1&MobileOS=ETC&MobileApp=WhereShallWeMeet&_type=json&listYN=Y&arrange=E&mapX=${(Math.round(geoMedianPos[1] * 1000000) / 1000000).toFixed(6)}&mapY=${(Math.round(geoMedianPos[0] * 1000000) / 1000000).toFixed(6)}&radius=${searchDist}&contentTypeId=12`);
         console.log(response12.data);
         const data12 = await response12.data.response.body.items.item;
-        const response14 = await axios.get(`https://apis.data.go.kr/B551011/KorService1/locationBasedList1?serviceKey=aMat5cuUbFNFhyobZylKAgyEgVGjbYe9MNjhWwx6jvm%2BAOvMa9GuhE8QPf4EQnAARslaft9vJXynH0Y1IK0tGw%3D%3D&numOfRows=100000&pageNo=1&MobileOS=ETC&MobileApp=WhereShallWeMeet&_type=json&listYN=Y&arrange=E&mapX=${(Math.round(geoMedianPos[1] * 1000000) / 1000000).toFixed(6)}&mapY=${(Math.round(geoMedianPos[0] * 1000000) / 1000000).toFixed(6)}&radius=3000&contentTypeId=14`);
+        const response14 = await axios.get(`https://apis.data.go.kr/B551011/KorService1/locationBasedList1?serviceKey=aMat5cuUbFNFhyobZylKAgyEgVGjbYe9MNjhWwx6jvm%2BAOvMa9GuhE8QPf4EQnAARslaft9vJXynH0Y1IK0tGw%3D%3D&numOfRows=100000&pageNo=1&MobileOS=ETC&MobileApp=WhereShallWeMeet&_type=json&listYN=Y&arrange=E&mapX=${(Math.round(geoMedianPos[1] * 1000000) / 1000000).toFixed(6)}&mapY=${(Math.round(geoMedianPos[0] * 1000000) / 1000000).toFixed(6)}&radius=${searchDist}&contentTypeId=14`);
         const data14 = await response14.data.response.body.items.item;
-        const response32 = await axios.get(`https://apis.data.go.kr/B551011/KorService1/locationBasedList1?serviceKey=aMat5cuUbFNFhyobZylKAgyEgVGjbYe9MNjhWwx6jvm%2BAOvMa9GuhE8QPf4EQnAARslaft9vJXynH0Y1IK0tGw%3D%3D&numOfRows=100000&pageNo=1&MobileOS=ETC&MobileApp=WhereShallWeMeet&_type=json&listYN=Y&arrange=E&mapX=${(Math.round(geoMedianPos[1] * 1000000) / 1000000).toFixed(6)}&mapY=${(Math.round(geoMedianPos[0] * 1000000) / 1000000).toFixed(6)}&radius=3000&contentTypeId=32`);
+        const response32 = await axios.get(`https://apis.data.go.kr/B551011/KorService1/locationBasedList1?serviceKey=aMat5cuUbFNFhyobZylKAgyEgVGjbYe9MNjhWwx6jvm%2BAOvMa9GuhE8QPf4EQnAARslaft9vJXynH0Y1IK0tGw%3D%3D&numOfRows=100000&pageNo=1&MobileOS=ETC&MobileApp=WhereShallWeMeet&_type=json&listYN=Y&arrange=E&mapX=${(Math.round(geoMedianPos[1] * 1000000) / 1000000).toFixed(6)}&mapY=${(Math.round(geoMedianPos[0] * 1000000) / 1000000).toFixed(6)}&radius=${searchDist}&contentTypeId=32`);
         const data32 = await response32.data.response.body.items.item;
-        const response38 = await axios.get(`https://apis.data.go.kr/B551011/KorService1/locationBasedList1?serviceKey=aMat5cuUbFNFhyobZylKAgyEgVGjbYe9MNjhWwx6jvm%2BAOvMa9GuhE8QPf4EQnAARslaft9vJXynH0Y1IK0tGw%3D%3D&numOfRows=100000&pageNo=1&MobileOS=ETC&MobileApp=WhereShallWeMeet&_type=json&listYN=Y&arrange=E&mapX=${(Math.round(geoMedianPos[1] * 1000000) / 1000000).toFixed(6)}&mapY=${(Math.round(geoMedianPos[0] * 1000000) / 1000000).toFixed(6)}&radius=3000&contentTypeId=38`);
+        const response38 = await axios.get(`https://apis.data.go.kr/B551011/KorService1/locationBasedList1?serviceKey=aMat5cuUbFNFhyobZylKAgyEgVGjbYe9MNjhWwx6jvm%2BAOvMa9GuhE8QPf4EQnAARslaft9vJXynH0Y1IK0tGw%3D%3D&numOfRows=100000&pageNo=1&MobileOS=ETC&MobileApp=WhereShallWeMeet&_type=json&listYN=Y&arrange=E&mapX=${(Math.round(geoMedianPos[1] * 1000000) / 1000000).toFixed(6)}&mapY=${(Math.round(geoMedianPos[0] * 1000000) / 1000000).toFixed(6)}&radius=${searchDist}&contentTypeId=38`);
         const data38 = await response38.data.response.body.items.item;
-        const response39 = await axios.get(`https://apis.data.go.kr/B551011/KorService1/locationBasedList1?serviceKey=aMat5cuUbFNFhyobZylKAgyEgVGjbYe9MNjhWwx6jvm%2BAOvMa9GuhE8QPf4EQnAARslaft9vJXynH0Y1IK0tGw%3D%3D&numOfRows=100000&pageNo=1&MobileOS=ETC&MobileApp=WhereShallWeMeet&_type=json&listYN=Y&arrange=E&mapX=${(Math.round(geoMedianPos[1] * 1000000) / 1000000).toFixed(6)}&mapY=${(Math.round(geoMedianPos[0] * 1000000) / 1000000).toFixed(6)}&radius=3000&contentTypeId=39`);
+        const response39 = await axios.get(`https://apis.data.go.kr/B551011/KorService1/locationBasedList1?serviceKey=aMat5cuUbFNFhyobZylKAgyEgVGjbYe9MNjhWwx6jvm%2BAOvMa9GuhE8QPf4EQnAARslaft9vJXynH0Y1IK0tGw%3D%3D&numOfRows=100000&pageNo=1&MobileOS=ETC&MobileApp=WhereShallWeMeet&_type=json&listYN=Y&arrange=E&mapX=${(Math.round(geoMedianPos[1] * 1000000) / 1000000).toFixed(6)}&mapY=${(Math.round(geoMedianPos[0] * 1000000) / 1000000).toFixed(6)}&radius=${searchDist}&contentTypeId=39`);
         const data39 = await response39.data.response.body.items.item;
         const data = [];
         if(data12 !== undefined) data.push(...Object.values(data12));
@@ -130,12 +136,12 @@ function Map() {
 
     if (mode === "viewFacility") fetchData();
 
-  }, [mode])
+  }, [mode, searchDist])
 
   const mapRef = useRef(null);
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
+    if (mode === "setMap"&&e.key === 'Enter') {
       const center = mapRef.current.getCenter();
       const newMarker = {
         id: position.length+1,
@@ -144,7 +150,7 @@ function Map() {
       };
       setPosition([...position, newMarker]);
     }
-    if (e.keyCode === 32) {
+    if (mode === "setMap"&&e.keyCode === 32) {
       if (position.length >= 3) {
         const result = geometricMedian(position);
         setGeoMedianPos(result);
@@ -154,8 +160,19 @@ function Map() {
         setGeoMedianPos(result);
         console.log(result);
       } else {
-        console.log("아직 부족해");
+        const result = position[0].pos;
+        setGeoMedianPos(result);
+        console.log(result);
       }
+    }
+    if (e.code === 'KeyQ') {
+      let newSearchDist = prompt(`새로운 탐색 거리를 숫자로 입력하세요.\n탐색 거리는 500m부터 5000m까지의 값이 가능합니다.\n현재 탐색 거리는 ${searchDist}m입니다.`);
+      if(newSearchDist === null||isNaN(parseInt(newSearchDist))) newSearchDist = searchDist;
+      else{
+        if(parseInt(newSearchDist) < 500) newSearchDist = 500;
+        else if(parseInt(newSearchDist) > 5000) newSearchDist = 5000;
+      }
+      setSearchDist(parseInt(newSearchDist));
     }
   };
 
@@ -180,6 +197,7 @@ function Map() {
         item.telname = data_detail.telname;
         item.zipcode = data_detail.zipcode;
         item.overview = data_detail.overview;
+        item.homepage = data_detail.homepage;
         item.detail_added = true;
       }
     }catch(error){
@@ -223,7 +241,7 @@ function Map() {
         worldCopyJump
       >
         <TileLayer
-          attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+          attribution={`&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors<br>엔터 키를 눌러 마커 생성<br>스페이스 바를 눌러 기하 중앙값 마커 표시<br>마커를 드래그해 이동, 클릭해 동작 수행<br>현재 탐색 거리는 ${searchDist}m입니다.<br>q 키를 눌러 다시 설정할 수 있습니다.`}
           url="https://tiles.osm.kr/hot/{z}/{x}/{y}.png"
         />
         {position.map((marker, index) => (
@@ -239,6 +257,7 @@ function Map() {
           geoMedianPos={geoMedianPos}
           mode={mode}
           setMode={setMode}
+          setFacilityMapPos={setFacilityMapPos}
         />
       </MapContainer>
     );
@@ -246,9 +265,9 @@ function Map() {
     return (
       <div>
         <MapContainer
-          key={currentPos}
+          key={facilityMapPos}
           className="map-small"
-          center={geoMedianPos}
+          center={facilityMapPos}
           zoom={16}
           ref={mapRef}
           id="map"
@@ -263,6 +282,13 @@ function Map() {
               <Marker key={index} position={[item.mapy,item.mapx]}>
                 <Popup position={[item.mapy, item.mapx]}>
                   <div>{item.title} ({Math.round(item.dist)}m)</div>
+                  <div>
+                    {item.contenttypeid === "12"&&"관광지"}
+                    {item.contenttypeid === "14"&&"문화시설"}
+                    {item.contenttypeid === "32"&&"숙박"}
+                    {item.contenttypeid === "38"&&"쇼핑"}
+                    {item.contenttypeid === "39"&&"음식점"}
+                  </div>
                   <div>{item.addr1}</div>
                   {item.firstimage && <img src={item.firstimage} alt="" className="facility-small-image" style={{marginTop: ".5rem", marginBottom: ".5rem"}}></img>}
                   <div>
@@ -293,11 +319,11 @@ function Map() {
               data === null?
               <h3 className="facility-title">데이터를 불러오는 중에 에러가 발생했습니다.</h3>:
               <>
-                <h3 className="facility-title">{dataNum!==0?`3㎞ 이내에 문화 시설 ${dataNum}개가 검색되었습니다.`:"3㎞ 이내에 검색된 문화 시설이 없습니다."}</h3>
+                <h3 className="facility-title">{dataNum!==0?`${searchDist/1000}㎞ 이내에 문화 시설 ${dataNum}개가 검색되었습니다.`:`${searchDist/1000}㎞ 이내에 검색된 문화 시설이 없습니다.`}</h3>
                 {
                   data.map((item, index) => (
-                    <article key={index} className="facility-article" style={{backgroundColor: `hsl(0, 80%, ${Math.round(item.dist)/50+20}%)`,
-                    color: Math.round(item.dist)>2300?"#000000":"#efefef"}} id={item.contentid}>
+                    <article key={index} className="facility-article" style={{backgroundColor: `hsl(0, 80%, ${Math.round(item.dist)/searchDist*60+20}%)`,
+                    color: Math.round(item.dist)/searchDist*60+20>66?"#000000":"#efefef"}} id={item.contentid}>
                       <div>{item.title} ({Math.round(item.dist)}m)</div>
                       <div>
                         {item.contenttypeid === "12"&&"관광지"}
@@ -309,9 +335,12 @@ function Map() {
                       <div>{item.addr1}</div>
                       {item.firstimage&&<img src={item.firstimage} alt="" className="facility-image" style={{marginTop: ".5rem", marginBottom: ".5rem"}}></img>}
                       {item.tel !== ""&&<div>전화번호: {item.tel} ({item.telname!==undefined&&item.telname})</div>}
-                      {item.zipcode !== undefined&&<div>우편번호: {item.zipcode}</div>}
+                      {item.zipcode !== undefined&&item.zipcode !== ""&&<div>우편번호: {item.zipcode}</div>}
+                      {item.homepage !== undefined&&item.homepage !== ""&&<>
+                        <div>홈페이지</div>
+                        <div dangerouslySetInnerHTML={{__html: item.homepage}}></div>
+                      </>}
                       {item.overview !== undefined&&<p dangerouslySetInnerHTML={{ __html: item.overview }}></p>}
-                      {!item.detail_added&&<div><button className="facility-button" onClick={() => loadDetails(index)}>자세히 보기</button></div>}
                       {item.images_added === true&&item.images !== undefined&&item.images.map((imageitem, imageindex) => (
                         <div key={imageindex} className="facility-sub-image-container">
                           <img src={imageitem.originimgurl} alt="" className="facility-sub-image"></img>
@@ -324,6 +353,8 @@ function Map() {
                           {menuimageitem.imgname !== ""&&<div className="facility-sub-image-label">{menuimageitem.imgname}</div>}
                         </div>
                       ))}
+                      <div><Link to="map" spy={true} smooth={true} duration={500} onClick={() => setFacilityMapPos([item.mapy, item.mapx])} style={{cursor: "pointer"}}>지도에서 해당 장소 확인하기</Link></div>
+                      {!item.detail_added&&<div><button className="facility-button" onClick={() => loadDetails(index)}>자세히 보기</button></div>}
                     </article>
                   ))
                 }
